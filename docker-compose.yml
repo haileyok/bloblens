@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
 
   retina:
-    image: # INSERT YOUR GHCR LINK HERE
+    image: ghcr.io/haileyok/osprey-atproto/retina:main
     ports:
       - "8080:8080"
     restart: unless-stopped
@@ -25,12 +25,12 @@ services:
       - retina
     environment:
       - RETINA_HOST=http://retina:8080
-      - WEBSOCKET_HOST=wss://jetstream.atproto.tools/subscribe
+      - WEBSOCKET_HOST=wss://bsky.network
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6334
-      - QDRANT_COLLECTION=blobs
-      - MAX_SEARCH_TIME=5s
-      - MAX_LIMIT=100
+      - QDRANT_COLLECTION=profile_blobs
+      - MAX_SEARCH_TIME=24h
+      - MAX_LIMIT=20
       - SEEN_THRESHOLD=5
       - MAX_HAMMING_DISTANCE=31
     command:
