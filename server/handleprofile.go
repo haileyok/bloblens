@@ -121,13 +121,17 @@ func (s *Server) handleProfile(ctx context.Context, did string, profile *bsky.Ac
 				return
 			}
 
+			seenDids := make(map[string]bool)
 			for _, r := range results {
 				rDidVal, ok := r.Payload["did"]
 				if !ok {
 					continue
 				}
 				rDid := rDidVal.GetStringValue()
-				similarAvatarDids = append(similarAvatarDids, rDid)
+				if !seenDids[rDid] {
+					seenDids[rDid] = true
+					similarAvatarDids = append(similarAvatarDids, rDid)
+				}
 			}
 		})
 	}
@@ -157,13 +161,17 @@ func (s *Server) handleProfile(ctx context.Context, did string, profile *bsky.Ac
 				return
 			}
 
+			seenDids := make(map[string]bool)
 			for _, r := range results {
 				rDidVal, ok := r.Payload["did"]
 				if !ok {
 					continue
 				}
 				rDid := rDidVal.GetStringValue()
-				similarBannerDids = append(similarBannerDids, rDid)
+				if !seenDids[rDid] {
+					seenDids[rDid] = true
+					similarBannerDids = append(similarBannerDids, rDid)
+				}
 			}
 		})
 	}
