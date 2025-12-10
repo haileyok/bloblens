@@ -1,0 +1,49 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT_HOST=0.0.0.0
+    restart: unless-stopped
+
+  retina:
+    image: # INSERT YOUR GHCR LINK HERE
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  bloblens:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - qdrant
+      - retina
+    environment:
+      - RETINA_HOST=http://retina:8080
+      - WEBSOCKET_HOST=wss://jetstream.atproto.tools/subscribe
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6334
+      - QDRANT_COLLECTION=blobs
+      - MAX_SEARCH_TIME=5s
+      - MAX_LIMIT=100
+      - SEEN_THRESHOLD=5
+      - MAX_HAMMING_DISTANCE=31
+    command:
+      - --retina-host=${RETINA_HOST}
+      - --websocket-host=${WEBSOCKET_HOST}
+      - --qdrant-host=${QDRANT_HOST}
+      - --qdrant-port=${QDRANT_PORT}
+      - --qdrant-collection=${QDRANT_COLLECTION}
+      - --max-search-time=${MAX_SEARCH_TIME}
+      - --max-limit=${MAX_LIMIT}
+      - --seen-threshold=${SEEN_THRESHOLD}
+      - --max-hamming-distance=${MAX_HAMMING_DISTANCE}
+    restart: unless-stopped
+
+volumes:
+  qdrant_storage:
