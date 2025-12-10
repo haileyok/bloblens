@@ -23,26 +23,16 @@ services:
     depends_on:
       - qdrant
       - retina
-    environment:
-      - RETINA_HOST=http://retina:8080
-      - WEBSOCKET_HOST=wss://bsky.network
-      - QDRANT_HOST=qdrant
-      - QDRANT_PORT=6334
-      - QDRANT_COLLECTION=profile_blobs
-      - MAX_SEARCH_TIME=24h
-      - MAX_LIMIT=20
-      - SEEN_THRESHOLD=5
-      - MAX_HAMMING_DISTANCE=31
     command:
-      - --retina-host=${RETINA_HOST}
-      - --websocket-host=${WEBSOCKET_HOST}
-      - --qdrant-host=${QDRANT_HOST}
-      - --qdrant-port=${QDRANT_PORT}
-      - --qdrant-collection=${QDRANT_COLLECTION}
-      - --max-search-time=${MAX_SEARCH_TIME}
-      - --max-limit=${MAX_LIMIT}
-      - --seen-threshold=${SEEN_THRESHOLD}
-      - --max-hamming-distance=${MAX_HAMMING_DISTANCE}
+      - --retina-host=http://retina:8080
+      - --websocket-host=wss://bsky.network
+      - --qdrant-host=qdrant
+      - --qdrant-port=6334
+      - --qdrant-collection=profile_blobs
+      - --max-search-time=24h
+      - --max-limit=20
+      - --seen-threshold=5
+      - --max-hamming-distance=31
     restart: unless-stopped
 
 volumes:

@@ -35,7 +35,7 @@ func (s *Server) handleProfile(ctx context.Context, did string, profile *bsky.Ac
 	var bannerHash string
 	getHashResult := func(kind, cid string) {
 		logger := logger.With("kind", kind, "cid", cid)
-		hashResult, err := s.getImageHash(searchCtx, did, avatarCid)
+		hashResult, err := s.getImageHash(searchCtx, did, cid)
 		if err != nil {
 			logger.Error("failed to get hash result", "err", err)
 			return
@@ -175,6 +175,8 @@ func (s *Server) handleProfile(ctx context.Context, did string, profile *bsky.Ac
 			}
 		})
 	}
+
+	wg.Wait()
 
 	// inserts can happen in a different goroutine so we don't block returning these results
 	go func() {

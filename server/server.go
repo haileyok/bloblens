@@ -101,7 +101,7 @@ func New(ctx context.Context, args *Args) (*Server, error) {
 			return nil, fmt.Errorf("failed to create flagged image collection timestamp index: %w", err)
 		}
 
-		args.Logger.Info("Successfully created flagged image vector collection in Milvus")
+		args.Logger.Info("Successfully created flagged image vector collection in Qdrant")
 
 	} else {
 		args.Logger.Info("collection already exists", "collection", args.QdrantColletion)
@@ -134,7 +134,7 @@ func (s *Server) Run(ctx context.Context) error {
 	logger := s.logger.With("name", "Run")
 
 	wsDialer := websocket.DefaultDialer
-	u, err := url.Parse(s.websocketHost)
+	u, err := url.Parse(s.websocketHost + "/xrpc/com.atproto.sync.subscribeRepos")
 	if err != nil {
 		return fmt.Errorf("failed to parse websocket host: %w", err)
 	}
