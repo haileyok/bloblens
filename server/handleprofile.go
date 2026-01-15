@@ -1,14 +1,18 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
+	"image"
 	"sync"
 	"time"
 
 	"github.com/bluesky-social/indigo/api/bsky"
 	"github.com/google/uuid"
+	pdq "github.com/haileyok/gopdq"
+	pdqhelpers "github.com/haileyok/gopdq/helpers"
 	"github.com/qdrant/go-client/qdrant"
 )
 
@@ -35,25 +39,34 @@ func (s *Server) handleProfile(ctx context.Context, did string, profile *bsky.Ac
 	var bannerHash string
 	getHashResult := func(kind, cid string) {
 		logger := logger.With("kind", kind, "cid", cid)
-		hashResult, err := s.getImageHash(searchCtx, did, cid)
+
+		imgBytes, err := s.getImageBytes(ctx, did, cid)
 		if err != nil {
-			logger.Error("failed to get hash result", "err", err)
+			logger.Error("failed to get image bytes", "err", err)
 			return
 		}
-		if hashResult.QualityTooLow {
-			logger.Info("quality too low")
+
+		img, err := decodeImageBytesAndResize(imgBytes)
+		if err != nil {
+			logger.Error("failed to get image from bytes", "err", err)
 			return
 		}
-		if hashResult.Hash == nil {
-			logger.Warn("nil hash")
+
+		hashResult, err := pdq.HashFromImage(img)
+		if err != nil {
+			logger.Error("failed to get hash from image", "err", err)
+		}
+
+		if hashResult.Quality < 50 {
+			logger.Info("quality too low", "quality", hashResult.Quality)
 			return
 		}
 
 		switch kind {
 		case "avatar":
-			avatarHash = *hashResult.Hash
+			avatarHash = hashResult.Hash
 		case "banner":
-			bannerHash = *hashResult.Hash
+			bannerHash = hashResult.Hash
 		}
 	}
 
@@ -231,12 +244,24 @@ func (s *Server) handleProfile(ctx context.Context, did string, profile *bsky.Ac
 	}
 }
 
-func convertHash(hash string) ([]float32, error) {
-	hashBin, err := HexToBinary(hash)
+func decodeImageBytesAndResize(imgBytes []byte) (image.Image, error) {
+	img, _, err := image.Decode(bytes.NewReader(imgBytes))
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert to binary: %w", err)
+		return nil, err
 	}
-	return BinaryToFloatVector(hashBin), nil
+
+	img = pdqhelpers.ResizeIfNeeded(img)
+
+	return img, nil
+}
+
+func convertHash(hash string) ([]float32, error) {
+	bin, err := HexToBinary(hash)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get binary from pdq hash: %w", err)
+	}
+
+	return BinaryToFloatVector([]byte(bin)), nil
 }
 
 func HexToBinary(input string) ([]byte, error) {

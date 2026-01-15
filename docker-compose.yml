@@ -10,21 +10,13 @@ services:
       - QDRANT_HOST=0.0.0.0
     restart: unless-stopped
 
-  retina:
-    image: ghcr.io/haileyok/osprey-atproto/retina:main
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
-
   bloblens:
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
       - qdrant
-      - retina
     command:
-      - --retina-host=http://retina:8080
       - --websocket-host=wss://bsky.network
       - --qdrant-host=qdrant
       - --qdrant-port=6334

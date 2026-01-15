@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"math"
 	"net/http"
@@ -32,7 +33,6 @@ type Server struct {
 	dbClient   *qdrant.Client
 	httpClient *http.Client
 
-	retinaHost    string
 	websocketHost string
 
 	qdrantCollection string
@@ -46,7 +46,6 @@ type Server struct {
 
 type Args struct {
 	Logger             *slog.Logger
-	RetinaHost         string
 	WebsocketHost      string
 	MaxSearchTime      time.Duration
 	MaxLimit           int
@@ -108,7 +107,6 @@ func New(ctx context.Context, args *Args) (*Server, error) {
 	}
 
 	server := Server{
-		retinaHost:       args.RetinaHost,
 		websocketHost:    args.WebsocketHost,
 		qdrantCollection: args.QdrantColletion,
 		maxSearchTime:    args.MaxSearchTime,
@@ -269,4 +267,31 @@ func (s *Server) handleEvent(ctx context.Context, evt *events.XRPCStreamEvent) e
 	}
 
 	return nil
+}
+
+func (s *Server) getImageBytes(ctx context.Context, did, cid string) ([]byte, error) {
+	cdnUrl := fmt.Sprintf("https://cdn.bsky.app/img/feed_thumbnail/plain/%s/%s@jpeg", did, cid)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, cdnUrl, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request for image download: %w", err)
+	}
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to download image: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		io.Copy(io.Discard, resp.Body)
+		return nil, fmt.Errorf("received non-200 status code when downloading image: %d", resp.StatusCode)
+	}
+
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body when downloading image: %w", err)
+	}
+
+	return b, nil
 }

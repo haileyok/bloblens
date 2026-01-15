@@ -18,10 +18,6 @@ func main() {
 		Flags: []cli.Flag{
 			telemetry.CLIFlagDebug,
 			&cli.StringFlag{
-				Name:  "retina-host",
-				Usage: "host of the retina hashing server",
-			},
-			&cli.StringFlag{
 				Name:  "websocket-host",
 				Usage: "host for the atproto firehose",
 			},
@@ -70,7 +66,6 @@ func run(cmd *cli.Context) error {
 
 	server, err := server.New(ctx, &server.Args{
 		Logger:             logger,
-		RetinaHost:         cmd.String("retina-host"),
 		WebsocketHost:      cmd.String("websocket-host"),
 		MaxSearchTime:      cmd.Duration("max-search-time"),
 		MaxLimit:           cmd.Int("max-limit"),

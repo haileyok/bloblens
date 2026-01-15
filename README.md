@@ -12,7 +12,6 @@ Useful for finding coordinated behavior, tracking ban evasion, or whatever else
 
 You'll need three things running:
 - **bloblens** (this)
-- **Retina** - image hashing service (handles PDQ hashing)
 - **Qdrant** - vector database (stores and searches hashes)
 
 ### With Docker Compose
@@ -33,7 +32,6 @@ go build -o bloblens ./cmd/bloblens
 Run:
 ```bash
 ./bloblens \
-  --retina-host=http://localhost:8080 \
   --websocket-host=wss://jetstream.atproto.tools/subscribe \
   --qdrant-host=localhost \
   --qdrant-port=6334 \
@@ -46,7 +44,6 @@ Run:
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--retina-host` | URL of your Retina instance | required |
 | `--websocket-host` | ATProto firehose URL | required |
 | `--qdrant-host` | Qdrant server hostname | required |
 | `--qdrant-port` | Qdrant gRPC port | required |
@@ -61,7 +58,6 @@ Run:
 
 1. Watches the firehose for `app.bsky.actor.profile` records
 2. Extracts avatar and banner blob refs
-3. Sends them to Retina for PDQ hashing
 4. Stores the 256-dimensional vector in Qdrant
 5. Searches Qdrant for similar existing hashes
 6. Logs when threshold is exceeded
